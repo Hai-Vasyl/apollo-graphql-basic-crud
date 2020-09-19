@@ -9,15 +9,16 @@ const {
   GraphQLID,
   GraphQLSchema,
   GraphQLList,
+  GraphQLNonNull,
 } = graphql
 
 const AuthorType = new GraphQLObjectType({
   name: "Author",
   fields: () => ({
     id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    age: { type: GraphQLInt },
-    gender: { type: GraphQLString },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    age: { type: new GraphQLNonNull(GraphQLInt) },
+    gender: { type: new GraphQLNonNull(GraphQLString) },
     books: {
       type: new GraphQLList(BookType),
       resolve(parent, args) {
@@ -31,10 +32,10 @@ const BookType = new GraphQLObjectType({
   name: "Book",
   fields: () => ({
     id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    price: { type: GraphQLInt },
-    genre: { type: GraphQLString },
-    description: { type: GraphQLString },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    price: { type: new GraphQLNonNull(GraphQLInt) },
+    genre: { type: new GraphQLNonNull(GraphQLString) },
+    description: { type: new GraphQLNonNull(GraphQLString) },
     author: {
       type: AuthorType,
       resolve(parent, args) {
@@ -82,9 +83,9 @@ const Mutation = new GraphQLObjectType({
     addAuthor: {
       type: AuthorType,
       args: {
-        name: { type: GraphQLString },
-        age: { type: GraphQLInt },
-        gender: { type: GraphQLString },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        age: { type: new GraphQLNonNull(GraphQLInt) },
+        gender: { type: new GraphQLNonNull(GraphQLString) },
       },
       resolve(parent, args) {
         const author = new Author({
@@ -99,10 +100,10 @@ const Mutation = new GraphQLObjectType({
     addBook: {
       type: BookType,
       args: {
-        name: { type: GraphQLString },
-        price: { type: GraphQLInt },
-        genre: { type: GraphQLString },
-        description: { type: GraphQLString },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        price: { type: new GraphQLNonNull(GraphQLInt) },
+        genre: { type: new GraphQLNonNull(GraphQLString) },
+        description: { type: new GraphQLNonNull(GraphQLString) },
         authorId: { type: GraphQLID },
       },
       resolve(parent, args) {
@@ -115,6 +116,57 @@ const Mutation = new GraphQLObjectType({
         })
 
         return book.save()
+      },
+    },
+    updateBook: {
+      type: BookType,
+      args: {
+        id: { type: GraphQLID },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        price: { type: new GraphQLNonNull(GraphQLInt) },
+        genre: { type: new GraphQLNonNull(GraphQLString) },
+        description: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parent, { name, id, price, description, genre }) {
+        return Book.findByIdAndUpdate(
+          id,
+          { name, price, description, genre },
+          { new: true }
+        )
+      },
+    },
+    updateAuthor: {
+      type: AuthorType,
+      args: {
+        id: { type: GraphQLID },
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        age: { type: new GraphQLNonNull(GraphQLInt) },
+        gender: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve(parents, { name, id, age, gender }) {
+        return Author.findByIdAndUpdate(
+          id,
+          { name, age, gender },
+          { new: true }
+        )
+      },
+    },
+    deleteBook: {
+      type: BookType,
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve(parent, { id }) {
+        return Book.findByIdAndRemove(id)
+      },
+    },
+    deleteAuthor: {
+      type: AuthorType,
+      args: {
+        id: { type: GraphQLID },
+      },
+      resolve(parent, { id }) {
+        return Author.findByIdAndRemove(id)
       },
     },
   },
